@@ -3,8 +3,7 @@
 // Usage: <a href="https://testportal.invalid/YOUR_TEST_ID">Start Test</a>
 // ============================================
 (() => {
-  // TODO: Update this URL after deploying the serverless backend
-  const API_BASE_URL = 'https://YOUR_API_GATEWAY_ID.execute-api.eu-south-1.amazonaws.com/dev';
+  const API_BASE_URL = 'https://gs8iaekpl2.execute-api.eu-south-1.amazonaws.com/dev';
   const TESTPORTAL_URL = 'https://www.testportal.net/exam/start.html';
   const SEL = 'a[href^="https://testportal.invalid/"]';
   let observer;
