@@ -1,0 +1,28 @@
+{
+  "name": "ice-testportal",
+  "version": "1.0.0",
+  "description": "ICE Campus TestPortal Integration - Serverless backend for VLE test access",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy --aws-profile ice",
+    "deploy:prod": "serverless deploy --stage prod --aws-profile ice",
+    "remove": "serverless remove --aws-profile ice",
+    "logs:token": "serverless logs -f requestToken --aws-profile ice",
+    "logs:access": "serverless logs -f getAccessCode --aws-profile ice"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/client-secrets-manager": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.0",
+    "serverless": "^4.4.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

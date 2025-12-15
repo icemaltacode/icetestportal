@@ -1,0 +1,125 @@
+# ICE TestPortal Integration
+# Serverless Framework v4 configuration
+# Integrates Circle.so VLE with TestPortal.com for test access
+
+service: ice-testportal
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: eu-south-1
+  stage: ${opt:stage, 'dev'}
+
+  # Environment variables available to all functions
+  environment:
+    TOKENS_TABLE: ${self:service}-tokens-${self:provider.stage}
+    TESTPORTAL_SECRET_NAME: ${self:service}/testportal-api-key/${self:provider.stage}
+    # Placeholder for TestPortal API endpoint - update when known
+    TESTPORTAL_API_URL: ${env:TESTPORTAL_API_URL, 'https://api.testportal.net/v1'}
+
+  # IAM permissions for Lambda functions
+  iam:
+    role:
+      statements:
+        # DynamoDB permissions for token storage
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:DeleteItem
+          Resource:
+            - !GetAtt TokensTable.Arn
+        # Secrets Manager permissions for API key retrieval
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource:
+            - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${self:service}/testportal-api-key/${self:provider.stage}*
+
+# Build configuration for TypeScript
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node22
+    platform: node
+
+functions:
+  # First Lambda: Generate and store authentication token
+  # Called from Circle.so to get a short-lived token for subsequent API calls
+  requestToken:
+    handler: src/handlers/requestToken.handler
+    description: Generates a short-lived token for TestPortal access requests
+    events:
+      - http:
+          path: /token/request
+          method: post
+          cors:
+            origin: https://my.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+      - http:
+          path: /token/request
+          method: options
+          cors:
+            origin: https://my.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+
+  # Second Lambda: Validate token and retrieve test access code
+  # Called with token, testId, and email to get an access code from TestPortal
+  getAccessCode:
+    handler: src/handlers/getAccessCode.handler
+    description: Validates token and retrieves test access code from TestPortal API
+    events:
+      - http:
+          path: /test/access-code
+          method: post
+          cors:
+            origin: https://my.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+      - http:
+          path: /test/access-code
+          method: options
+          cors:
+            origin: https://my.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+
+resources:
+  Resources:
+    # DynamoDB table for storing authentication tokens
+    TokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TOKENS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: token
+            AttributeType: S
+        KeySchema:
+          - AttributeName: token
+            KeyType: HASH
+        # Enable TTL for automatic token expiration
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        Tags:
+          - Key: Project
+            Value: ICE-TestPortal
+          - Key: Environment
+            Value: ${self:provider.stage}
+
+  Outputs:
+    ApiEndpoint:
+      Description: API Gateway endpoint URL
+      Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${self:provider.stage}
+    TokensTableName:
+      Description: DynamoDB table name for tokens
+      Value: !Ref TokensTable
