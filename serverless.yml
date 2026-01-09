@@ -93,6 +93,26 @@ functions:
 
 resources:
   Resources:
+    ApiGatewayResponseDefault4xx:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'https://my.icecampus.com'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+    ApiGatewayResponseDefault5xx:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'https://my.icecampus.com'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
     # DynamoDB table for storing authentication tokens
     TokensTable:
       Type: AWS::DynamoDB::Table

@@ -12,7 +12,7 @@
       "environment": {
         "TOKENS_TABLE": "ice-testportal-tokens-dev",
         "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/dev",
-        "TESTPORTAL_API_URL": "https://api.testportal.net/v1"
+        "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1"
       },
       "iam": {
         "role": {
@@ -153,7 +153,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
-                "S3Key": "serverless/ice-testportal/dev/1765800745758-2025-12-15T12:12:25.758Z/ice-testportal.zip"
+                "S3Key": "serverless/ice-testportal/dev/1767948624626-2026-01-09T08:50:24.626Z/ice-testportal.zip"
               },
               "Handler": "src/handlers/requestToken.handler",
               "Runtime": "nodejs22.x",
@@ -165,7 +165,7 @@
                 "Variables": {
                   "TOKENS_TABLE": "ice-testportal-tokens-dev",
                   "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/dev",
-                  "TESTPORTAL_API_URL": "https://api.testportal.net/v1",
+                  "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
                   "NODE_OPTIONS": "--enable-source-maps"
                 }
               },
@@ -185,7 +185,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
-                "S3Key": "serverless/ice-testportal/dev/1765800745758-2025-12-15T12:12:25.758Z/ice-testportal.zip"
+                "S3Key": "serverless/ice-testportal/dev/1767948624626-2026-01-09T08:50:24.626Z/ice-testportal.zip"
               },
               "Handler": "src/handlers/getAccessCode.handler",
               "Runtime": "nodejs22.x",
@@ -197,7 +197,7 @@
                 "Variables": {
                   "TOKENS_TABLE": "ice-testportal-tokens-dev",
                   "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/dev",
-                  "TESTPORTAL_API_URL": "https://api.testportal.net/v1",
+                  "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
                   "NODE_OPTIONS": "--enable-source-maps"
                 }
               },
@@ -212,25 +212,25 @@
               "GetAccessCodeLogGroup"
             ]
           },
-          "RequestTokenLambdaVersion1ePR2gPq55x67fVRimDCLjQW8ivhwoagWrnAKbgWSE": {
+          "RequestTokenLambdaVersionVKdVkPPbchzExWxcePoCcOqVUcm8p2YaqQYhyKWI": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "RequestTokenLambdaFunction"
               },
-              "CodeSha256": "OJSxJzl8QoLu31YMoV4jurTDs4TA4cjXZVpSjNHpfX4=",
+              "CodeSha256": "YGdQl89jgh4iC6TD3VO0XE0miPK/GBCcC0luzFMPND0=",
               "Description": "Generates a short-lived token for TestPortal access requests"
             }
           },
-          "GetAccessCodeLambdaVersion5lwD3Q8ORoycmg9gTYNpY2flOsZFtVZWkPd60A1AAA": {
+          "GetAccessCodeLambdaVersionHpe28Xh0k5GAQIVgvKJuYCkAQ8xSRcP2zxniRiYs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetAccessCodeLambdaFunction"
               },
-              "CodeSha256": "OJSxJzl8QoLu31YMoV4jurTDs4TA4cjXZVpSjNHpfX4=",
+              "CodeSha256": "YGdQl89jgh4iC6TD3VO0XE0miPK/GBCcC0luzFMPND0=",
               "Description": "Validates token and retrieves test access code from TestPortal API"
             }
           },
@@ -538,7 +538,7 @@
               "GetAccessCodeLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1765800735444": {
+          "ApiGatewayDeployment1767948587372": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -673,7 +673,7 @@
           "RequestTokenLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "RequestTokenLambdaVersion1ePR2gPq55x67fVRimDCLjQW8ivhwoagWrnAKbgWSE"
+              "Ref": "RequestTokenLambdaVersionVKdVkPPbchzExWxcePoCcOqVUcm8p2YaqQYhyKWI"
             },
             "Export": {
               "Name": "sls-ice-testportal-dev-RequestTokenLambdaFunctionQualifiedArn"
@@ -682,7 +682,7 @@
           "GetAccessCodeLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetAccessCodeLambdaVersion5lwD3Q8ORoycmg9gTYNpY2flOsZFtVZWkPd60A1AAA"
+              "Ref": "GetAccessCodeLambdaVersionHpe28Xh0k5GAQIVgvKJuYCkAQ8xSRcP2zxniRiYs"
             },
             "Export": {
               "Name": "sls-ice-testportal-dev-GetAccessCodeLambdaFunctionQualifiedArn"
@@ -781,7 +781,7 @@
         "timeout": 6,
         "runtime": "nodejs22.x",
         "vpc": {},
-        "versionLogicalId": "RequestTokenLambdaVersion1ePR2gPq55x67fVRimDCLjQW8ivhwoagWrnAKbgWSE"
+        "versionLogicalId": "RequestTokenLambdaVersionVKdVkPPbchzExWxcePoCcOqVUcm8p2YaqQYhyKWI"
       },
       "getAccessCode": {
         "handler": "src/handlers/getAccessCode.handler",
@@ -832,7 +832,7 @@
         "timeout": 6,
         "runtime": "nodejs22.x",
         "vpc": {},
-        "versionLogicalId": "GetAccessCodeLambdaVersion5lwD3Q8ORoycmg9gTYNpY2flOsZFtVZWkPd60A1AAA"
+        "versionLogicalId": "GetAccessCodeLambdaVersionHpe28Xh0k5GAQIVgvKJuYCkAQ8xSRcP2zxniRiYs"
       }
     },
     "resources": {
@@ -917,7 +917,7 @@
     "layers": {}
   },
   "package": {
-    "artifactDirectoryName": "serverless/ice-testportal/dev/1765800745758-2025-12-15T12:12:25.758Z",
+    "artifactDirectoryName": "serverless/ice-testportal/dev/1767948624626-2026-01-09T08:50:24.626Z",
     "artifact": "ice-testportal.zip"
   }
 }

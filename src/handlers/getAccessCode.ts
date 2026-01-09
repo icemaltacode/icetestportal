@@ -156,7 +156,6 @@ export const handler = async (
 
   console.log('[ICE_TESTPORTAL] Access code retrieved successfully', {
     testId,
-    email,
     isDevelopmentMode: result.isDevelopmentMode,
     accessCodePrefix: result.accessCode?.substring(0, 4) + '...'
   });
