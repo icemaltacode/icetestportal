@@ -14,8 +14,7 @@ provider:
   environment:
     TOKENS_TABLE: ${self:service}-tokens-${self:provider.stage}
     TESTPORTAL_SECRET_NAME: ${self:service}/testportal-api-key/${self:provider.stage}
-    # Placeholder for TestPortal API endpoint - update when known
-    TESTPORTAL_API_URL: ${env:TESTPORTAL_API_URL, 'https://api.testportal.net/v1'}
+    TESTPORTAL_API_URL: ${env:TESTPORTAL_API_URL, 'https://www.testportal.com/api/v1'}
 
   # IAM permissions for Lambda functions
   iam:

@@ -8,24 +8,26 @@ import { getTestPortalApiKey } from './secrets';
 // Mock access code returned when API key is not configured (development mode)
 const MOCK_ACCESS_CODE = 'ABC123MOCK';
 
-// TestPortal API endpoint (placeholder - update when actual API details are known)
-const TESTPORTAL_API_URL = process.env.TESTPORTAL_API_URL || 'https://api.testportal.net/v1';
+// TestPortal API base URL
+const TESTPORTAL_API_URL = process.env.TESTPORTAL_API_URL || 'https://www.testportal.com/api/v1';
 
 /**
  * Request payload for TestPortal API
  */
 interface AccessCodeRequest {
-  testId: string;
-  email: string;
+  count: number;
+  sendInvitationOnTestActivation?: boolean;
 }
 
 /**
  * Response from TestPortal API (assumed structure - update when API is documented)
  */
 interface TestPortalApiResponse {
-  accessCode?: string;
-  access_code?: string;
-  code?: string;
+  accessCodes?: Array<{
+    accessCode?: string;
+    access_code?: string;
+    code?: string;
+  }>;
   error?: string;
   message?: string;
 }
@@ -50,8 +52,7 @@ export interface AccessCodeResult {
  * @returns AccessCodeResult with the access code or error details
  */
 export const requestAccessCode = async (
-  testId: string,
-  email: string
+  testId: string
 ): Promise<AccessCodeResult> => {
   // Get API key from Secrets Manager
   const apiKey = await getTestPortalApiKey();
@@ -60,7 +61,6 @@ export const requestAccessCode = async (
   if (!apiKey) {
     console.log('[ICE_TESTPORTAL] Development mode: returning mock access code', {
       testId,
-      email,
       mockCode: MOCK_ACCESS_CODE
     });
 
@@ -75,27 +75,23 @@ export const requestAccessCode = async (
   try {
     console.log('[ICE_TESTPORTAL] Requesting access code from TestPortal API', {
       testId,
-      email,
       apiUrl: TESTPORTAL_API_URL
     });
 
-    const response = await fetch(`${TESTPORTAL_API_URL}/access-codes`, {
+    const response = await fetch(
+      `${TESTPORTAL_API_URL}/manager/me/tests/${testId}/current-date/access-codes/add`,
+      {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        // Alternative header formats - uncomment if needed based on actual API
-        // 'X-API-Key': apiKey,
-        // 'Api-Key': apiKey,
+        'Api-Key': apiKey
       },
       body: JSON.stringify({
-        testId,
-        email,
-        // Additional fields that might be required - update based on actual API
-        // testPublicId: testId,
-        // studentEmail: email,
+        count: 1,
+        sendInvitationOnTestActivation: false
       } as AccessCodeRequest)
-    });
+      }
+    );
 
     // Handle non-OK responses
     if (!response.ok) {
@@ -115,11 +111,16 @@ export const requestAccessCode = async (
     // Parse successful response
     const data: TestPortalApiResponse = await response.json();
 
-    // Extract access code (handle multiple possible field names)
-    const accessCode = data.accessCode || data.access_code || data.code;
+    const accessCodeEntry = data.accessCodes?.[0];
+    const accessCode =
+      accessCodeEntry?.accessCode ||
+      accessCodeEntry?.access_code ||
+      accessCodeEntry?.code;
 
     if (!accessCode) {
-      console.error('[ICE_TESTPORTAL] TestPortal API response missing access code', { data });
+      console.error('[ICE_TESTPORTAL] TestPortal API response missing access code', {
+        data
+      });
       return {
         success: false,
         error: 'TestPortal API response did not contain an access code'
@@ -128,7 +129,6 @@ export const requestAccessCode = async (
 
     console.log('[ICE_TESTPORTAL] Access code received from TestPortal API', {
       testId,
-      email,
       accessCodePrefix: accessCode.substring(0, 4) + '...'
     });
 
@@ -140,7 +140,6 @@ export const requestAccessCode = async (
   } catch (error) {
     console.error('[ICE_TESTPORTAL] Failed to request access code from TestPortal API', {
       testId,
-      email,
       error
     });
 

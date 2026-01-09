@@ -36,7 +36,6 @@ const corsHeaders = {
 interface AccessCodeRequestBody {
   token: string;
   testId: string;
-  email: string;
 }
 
 /**
@@ -59,12 +58,11 @@ const validateRequestBody = (body: unknown): body is AccessCodeRequestBody => {
     return false;
   }
 
-  const { token, testId, email } = body as Record<string, unknown>;
+  const { token, testId } = body as Record<string, unknown>;
 
   return (
     typeof token === 'string' && token.length > 0 &&
-    typeof testId === 'string' && testId.length > 0 &&
-    typeof email === 'string' && email.length > 0
+    typeof testId === 'string' && testId.length > 0
   );
 };
 
@@ -118,20 +116,18 @@ export const handler = async (
   if (!validateRequestBody(requestBody)) {
     console.warn('[ICE_TESTPORTAL] Missing required fields in request body', {
       hasToken: !!(requestBody as Record<string, unknown>)?.token,
-      hasTestId: !!(requestBody as Record<string, unknown>)?.testId,
-      hasEmail: !!(requestBody as Record<string, unknown>)?.email
+      hasTestId: !!(requestBody as Record<string, unknown>)?.testId
     });
     return createResponse(400, {
-      message: 'Missing required fields: token, testId, and email are required'
+      message: 'Missing required fields: token and testId are required'
     });
   }
 
-  const { token, testId, email } = requestBody;
+  const { token, testId } = requestBody;
 
   console.log('[ICE_TESTPORTAL] Processing access code request', {
     tokenPrefix: token.substring(0, 8) + '...',
-    testId,
-    email
+    testId
   });
 
   // Validate the authentication token
@@ -145,12 +141,11 @@ export const handler = async (
   }
 
   // Request access code from TestPortal API
-  const result = await requestAccessCode(testId, email);
+  const result = await requestAccessCode(testId);
 
   if (!result.success) {
     console.error('[ICE_TESTPORTAL] Failed to get access code from TestPortal', {
       testId,
-      email,
       error: result.error
     });
     return createResponse(502, {

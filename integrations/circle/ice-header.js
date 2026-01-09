@@ -4,7 +4,7 @@
 // ============================================
 (() => {
   const API_BASE_URL = 'https://gs8iaekpl2.execute-api.eu-south-1.amazonaws.com/dev';
-  const TESTPORTAL_URL = 'https://www.testportal.net/exam/start.html';
+  const TESTPORTAL_START_URL = 'https://icecampus.testportal.net/exam/start.html';
   const SEL = 'a[href^="https://testportal.invalid/"]';
   let observer;
 
@@ -13,7 +13,30 @@
     return window.circleUser || null;
   };
 
-  // Get user email from Circle.so user object or localStorage
+  const getUserNameParts = (user) => {
+    const firstName = user?.firstName || user?.first_name || null;
+    const lastName = user?.lastName || user?.last_name || null;
+    if (firstName && lastName) {
+      return { firstName, lastName };
+    }
+
+    const fullName = user?.name || user?.full_name || null;
+    if (!fullName || typeof fullName !== 'string') {
+      return { firstName: null, lastName: null };
+    }
+
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) {
+      return { firstName: parts[0], lastName: null };
+    }
+
+    return {
+      firstName: parts.slice(0, -1).join(' '),
+      lastName: parts[parts.length - 1]
+    };
+  };
+
+  const getPersonUid = (user) => user?.id || user?.uid || null;
   const getUserEmail = (user) => {
     if (user?.email) return user.email;
     try {
@@ -27,7 +50,6 @@
     } catch { return null; }
   };
 
-  // Request a short-lived authentication token from our backend
   const requestToken = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/token/request`, {
@@ -51,13 +73,12 @@
     }
   };
 
-  // Request test access code from our backend
-  const getAccessCode = async (token, testId, email) => {
+  const requestAccessCode = async (token, testId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/test/access-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, testId, email })
+        body: JSON.stringify({ token, testId })
       });
 
       if (!response.ok) {
@@ -77,39 +98,44 @@
     }
   };
 
-  // Navigate to TestPortal with the access code
-  const submitToTestportal = (accessCode) => {
-    const url = `${TESTPORTAL_URL}?p=${encodeURIComponent(accessCode)}`;
-    window.open(url, '_blank', 'noopener');
-  };
+  const submitStartTest = (accessCode, user) => {
+    const { firstName, lastName } = getUserNameParts(user);
 
-  // Main flow: get token -> get access code -> redirect to TestPortal
-  const launchTest = async (testId, user) => {
-    const email = getUserEmail(user);
-    if (!email) {
-      alert('Unable to determine your email address. Please try again.');
+    if (!firstName || !lastName) {
+      alert('Please add your first and last name to start this test.');
       return;
     }
 
-    console.log('[ICE] Testportal: Launching test', testId, 'for', email);
+    const startTestRequest = {
+      accessCode,
+      autoSubmit: false,
+      startPageReadOnly: true,
+      personalData: {
+        firstName,
+        lastName
+      }
+    };
 
-    // Step 1: Get authentication token
-    const token = await requestToken();
-    if (!token) {
-      alert('We could not prepare the test. Please try again.');
-      return;
+    const personUID = getPersonUid(user) || getUserEmail(user);
+    if (personUID) {
+      startTestRequest.personUID = String(personUID);
     }
 
-    // Step 2: Get access code from TestPortal via our backend
-    const accessCode = await getAccessCode(token, testId, email);
-    if (!accessCode) {
-      alert('We could not retrieve your test access code. Please try again.');
-      return;
-    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = TESTPORTAL_START_URL;
+    form.style.display = 'none';
 
-    // Step 3: Redirect to TestPortal
-    console.log('[ICE] Testportal: Redirecting with access code');
-    submitToTestportal(accessCode);
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'startTestRequest';
+    input.value = JSON.stringify(startTestRequest);
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+
+    setTimeout(() => form.remove(), 1000);
   };
 
   const updateTestportal = () => {
@@ -142,7 +168,19 @@
             alert('Please log in to start the test.');
             return;
           }
-          await launchTest(testId, currentUser);
+          const token = await requestToken();
+          if (!token) {
+            alert('We could not prepare the test. Please try again.');
+            return;
+          }
+
+          const accessCode = await requestAccessCode(token, testId);
+          if (!accessCode) {
+            alert('We could not retrieve your test access code. Please try again.');
+            return;
+          }
+
+          submitStartTest(accessCode, currentUser);
         });
 
         a.dataset.testportalHandled = 'true';
