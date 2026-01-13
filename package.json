@@ -7,6 +7,8 @@
     "build": "tsc",
     "deploy": "serverless deploy --aws-profile ice",
     "deploy:prod": "serverless deploy --stage prod --aws-profile ice",
+    "deploy:prod:all": "npm run deploy:prod && npm run sync-admin",
+    "sync-admin": "aws s3 sync admin s3://testportalurl.icecampus.com --delete --profile ice",
     "remove": "serverless remove --aws-profile ice",
     "logs:token": "serverless logs -f requestToken --aws-profile ice",
     "logs:access": "serverless logs -f getAccessCode --aws-profile ice"

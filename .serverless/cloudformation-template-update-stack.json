@@ -5,13 +5,25 @@
     "RequestTokenLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/ice-testportal-dev-requestToken"
+        "LogGroupName": "/aws/lambda/ice-testportal-prod-requestToken"
       }
     },
     "GetAccessCodeLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/ice-testportal-dev-getAccessCode"
+        "LogGroupName": "/aws/lambda/ice-testportal-prod-getAccessCode"
+      }
+    },
+    "AdminLoginLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/ice-testportal-prod-adminLogin"
+      }
+    },
+    "AdminTestsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/ice-testportal-prod-adminTests"
       }
     },
     "IamRoleLambdaExecution": {
@@ -40,7 +52,7 @@
                 "-",
                 [
                   "ice-testportal",
-                  "dev",
+                  "prod",
                   "lambda"
                 ]
               ]
@@ -57,7 +69,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ice-testportal-dev*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ice-testportal-prod*:*"
                     }
                   ]
                 },
@@ -68,34 +80,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ice-testportal-dev*:*:*"
-                    }
-                  ]
-                },
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "dynamodb:PutItem",
-                    "dynamodb:GetItem",
-                    "dynamodb:DeleteItem"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "TokensTable",
-                        "Arn"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "secretsmanager:GetSecretValue"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::Sub": "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:ice-testportal/testportal-api-key/dev*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ice-testportal-prod*:*:*"
                     }
                   ]
                 }
@@ -109,7 +94,7 @@
             "-",
             [
               "ice-testportal",
-              "dev",
+              "prod",
               {
                 "Ref": "AWS::Region"
               },
@@ -124,19 +109,20 @@
       "Properties": {
         "Code": {
           "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
-          "S3Key": "serverless/ice-testportal/dev/1767948624626-2026-01-09T08:50:24.626Z/ice-testportal.zip"
+          "S3Key": "serverless/ice-testportal/prod/1768295680174-2026-01-13T09:14:40.174Z/ice-testportal.zip"
         },
         "Handler": "src/handlers/requestToken.handler",
         "Runtime": "nodejs22.x",
-        "FunctionName": "ice-testportal-dev-requestToken",
+        "FunctionName": "ice-testportal-prod-requestToken",
         "MemorySize": 1024,
         "Timeout": 6,
         "Description": "Generates a short-lived token for TestPortal access requests",
         "Environment": {
           "Variables": {
-            "TOKENS_TABLE": "ice-testportal-tokens-dev",
-            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/dev",
+            "TOKENS_TABLE": "ice-testportal-tokens-prod",
+            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/prod",
             "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
+            "ADMIN_PASSWORD_SECRET_NAME": "ice-testportal/admin-password/prod",
             "NODE_OPTIONS": "--enable-source-maps"
           }
         },
@@ -156,19 +142,20 @@
       "Properties": {
         "Code": {
           "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
-          "S3Key": "serverless/ice-testportal/dev/1767948624626-2026-01-09T08:50:24.626Z/ice-testportal.zip"
+          "S3Key": "serverless/ice-testportal/prod/1768295680174-2026-01-13T09:14:40.174Z/ice-testportal.zip"
         },
         "Handler": "src/handlers/getAccessCode.handler",
         "Runtime": "nodejs22.x",
-        "FunctionName": "ice-testportal-dev-getAccessCode",
+        "FunctionName": "ice-testportal-prod-getAccessCode",
         "MemorySize": 1024,
         "Timeout": 6,
         "Description": "Validates token and retrieves test access code from TestPortal API",
         "Environment": {
           "Variables": {
-            "TOKENS_TABLE": "ice-testportal-tokens-dev",
-            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/dev",
+            "TOKENS_TABLE": "ice-testportal-tokens-prod",
+            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/prod",
             "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
+            "ADMIN_PASSWORD_SECRET_NAME": "ice-testportal/admin-password/prod",
             "NODE_OPTIONS": "--enable-source-maps"
           }
         },
@@ -183,32 +170,120 @@
         "GetAccessCodeLogGroup"
       ]
     },
-    "RequestTokenLambdaVersionVKdVkPPbchzExWxcePoCcOqVUcm8p2YaqQYhyKWI": {
+    "AdminLoginLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
+          "S3Key": "serverless/ice-testportal/prod/1768295680174-2026-01-13T09:14:40.174Z/ice-testportal.zip"
+        },
+        "Handler": "src/handlers/adminLogin.handler",
+        "Runtime": "nodejs22.x",
+        "FunctionName": "ice-testportal-prod-adminLogin",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Description": "Validates admin password for TestPortal admin frontend",
+        "Environment": {
+          "Variables": {
+            "TOKENS_TABLE": "ice-testportal-tokens-prod",
+            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/prod",
+            "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
+            "ADMIN_PASSWORD_SECRET_NAME": "ice-testportal/admin-password/prod",
+            "NODE_OPTIONS": "--enable-source-maps"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AdminLoginLogGroup"
+      ]
+    },
+    "AdminTestsLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
+          "S3Key": "serverless/ice-testportal/prod/1768295680174-2026-01-13T09:14:40.174Z/ice-testportal.zip"
+        },
+        "Handler": "src/handlers/adminTests.handler",
+        "Runtime": "nodejs22.x",
+        "FunctionName": "ice-testportal-prod-adminTests",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Description": "Returns TestPortal tests list for the admin frontend",
+        "Environment": {
+          "Variables": {
+            "TOKENS_TABLE": "ice-testportal-tokens-prod",
+            "TESTPORTAL_SECRET_NAME": "ice-testportal/testportal-api-key/prod",
+            "TESTPORTAL_API_URL": "https://www.testportal.com/api/v1",
+            "ADMIN_PASSWORD_SECRET_NAME": "ice-testportal/admin-password/prod",
+            "NODE_OPTIONS": "--enable-source-maps"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AdminTestsLogGroup"
+      ]
+    },
+    "RequestTokenLambdaVersionhGUcMQ4ZOtC0kFXkf73DxGyBNsB3MqIGslQraszDFqk": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "RequestTokenLambdaFunction"
         },
-        "CodeSha256": "YGdQl89jgh4iC6TD3VO0XE0miPK/GBCcC0luzFMPND0=",
+        "CodeSha256": "976nCGS//KYN9bpIACo5mfR+VymmAOCENRyt3LL5ijs=",
         "Description": "Generates a short-lived token for TestPortal access requests"
       }
     },
-    "GetAccessCodeLambdaVersionHpe28Xh0k5GAQIVgvKJuYCkAQ8xSRcP2zxniRiYs": {
+    "GetAccessCodeLambdaVersionhnZR8COLawlF3wWuoKUpMOJkV3FBkiVBubGfNGjeg": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetAccessCodeLambdaFunction"
         },
-        "CodeSha256": "YGdQl89jgh4iC6TD3VO0XE0miPK/GBCcC0luzFMPND0=",
+        "CodeSha256": "976nCGS//KYN9bpIACo5mfR+VymmAOCENRyt3LL5ijs=",
         "Description": "Validates token and retrieves test access code from TestPortal API"
+      }
+    },
+    "AdminLoginLambdaVersionwaNQxlSUUrkVPnMe7qlz7SF6gr5tFgK3EN66rQy0d0": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AdminLoginLambdaFunction"
+        },
+        "CodeSha256": "976nCGS//KYN9bpIACo5mfR+VymmAOCENRyt3LL5ijs=",
+        "Description": "Validates admin password for TestPortal admin frontend"
+      }
+    },
+    "AdminTestsLambdaVersioneEf6JtB3c9bQsRN6u9cZCjWzAKNI1XzQeXF3L9gI": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AdminTestsLambdaFunction"
+        },
+        "CodeSha256": "976nCGS//KYN9bpIACo5mfR+VymmAOCENRyt3LL5ijs=",
+        "Description": "Returns TestPortal tests list for the admin frontend"
       }
     },
     "ApiGatewayRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Name": "dev-ice-testportal",
+        "Name": "prod-ice-testportal",
         "EndpointConfiguration": {
           "Types": [
             "EDGE"
@@ -266,6 +341,57 @@
           "Ref": "ApiGatewayResourceTest"
         },
         "PathPart": "access-code",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceAdmin": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "admin",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceAdminLogin": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ApiGatewayResourceAdmin"
+        },
+        "PathPart": "login",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceAdminTests": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ApiGatewayResourceAdmin"
+        },
+        "PathPart": "tests",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceAdminTestsHeaders": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ApiGatewayResourceAdminTests"
+        },
+        "PathPart": "headers",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
@@ -417,6 +543,152 @@
         "GetAccessCodeLambdaPermissionApiGateway"
       ]
     },
+    "ApiGatewayMethodAdminLoginOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://testportalurl.icecampus.com'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ],
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AdminLoginLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAdminLogin"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false
+      },
+      "DependsOn": [
+        "AdminLoginLambdaPermissionApiGateway"
+      ]
+    },
+    "ApiGatewayMethodAdminTestsHeadersOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://testportalurl.icecampus.com'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Admin-Password,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ],
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AdminTestsLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAdminTestsHeaders"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false
+      },
+      "DependsOn": [
+        "AdminTestsLambdaPermissionApiGateway"
+      ]
+    },
     "ApiGatewayMethodTokenRequestPost": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -509,21 +781,119 @@
         "GetAccessCodeLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1767948587372": {
+    "ApiGatewayMethodAdminLoginPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAdminLogin"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AdminLoginLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "AdminLoginLambdaPermissionApiGateway"
+      ]
+    },
+    "ApiGatewayMethodAdminTestsHeadersGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAdminTestsHeaders"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AdminTestsLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "AdminTestsLambdaPermissionApiGateway"
+      ]
+    },
+    "ApiGatewayDeployment1768295675448": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         },
-        "StageName": "dev"
+        "StageName": "prod"
       },
       "DependsOn": [
         "ApiGatewayMethodTokenRequestOptions",
         "ApiGatewayMethodTestAccessDashcodeOptions",
+        "ApiGatewayMethodAdminLoginOptions",
+        "ApiGatewayMethodAdminTestsHeadersOptions",
         "ApiGatewayMethodTokenRequestPost",
         "ApiGatewayMethodTokenRequestOptions",
         "ApiGatewayMethodTestAccessDashcodePost",
-        "ApiGatewayMethodTestAccessDashcodeOptions"
+        "ApiGatewayMethodTestAccessDashcodeOptions",
+        "ApiGatewayMethodAdminLoginPost",
+        "ApiGatewayMethodAdminLoginOptions",
+        "ApiGatewayMethodAdminTestsHeadersGet",
+        "ApiGatewayMethodAdminTestsHeadersOptions"
       ]
     },
     "RequestTokenLambdaPermissionApiGateway": {
@@ -600,10 +970,112 @@
         }
       }
     },
+    "AdminLoginLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AdminLoginLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "AdminTestsLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AdminTestsLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "ApiGatewayResponseDefault4xx": {
+      "Type": "AWS::ApiGateway::GatewayResponse",
+      "Properties": {
+        "ResponseType": "DEFAULT_4XX",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ResponseParameters": {
+          "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+          "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Admin-Password,Authorization'",
+          "gatewayresponse.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'"
+        }
+      }
+    },
+    "ApiGatewayResponseDefault5xx": {
+      "Type": "AWS::ApiGateway::GatewayResponse",
+      "Properties": {
+        "ResponseType": "DEFAULT_5XX",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ResponseParameters": {
+          "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+          "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Admin-Password,Authorization'",
+          "gatewayresponse.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'"
+        }
+      }
+    },
     "TokensTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
-        "TableName": "ice-testportal-tokens-dev",
+        "TableName": "ice-testportal-tokens-prod",
         "BillingMode": "PAY_PER_REQUEST",
         "AttributeDefinitions": [
           {
@@ -628,7 +1100,7 @@
           },
           {
             "Key": "Environment",
-            "Value": "dev"
+            "Value": "prod"
           }
         ]
       }
@@ -638,25 +1110,43 @@
     "ServerlessDeploymentBucketName": {
       "Value": "serverless-framework-deployments-eu-south-1-fca1716b-cb9d",
       "Export": {
-        "Name": "sls-ice-testportal-dev-ServerlessDeploymentBucketName"
+        "Name": "sls-ice-testportal-prod-ServerlessDeploymentBucketName"
       }
     },
     "RequestTokenLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "RequestTokenLambdaVersionVKdVkPPbchzExWxcePoCcOqVUcm8p2YaqQYhyKWI"
+        "Ref": "RequestTokenLambdaVersionhGUcMQ4ZOtC0kFXkf73DxGyBNsB3MqIGslQraszDFqk"
       },
       "Export": {
-        "Name": "sls-ice-testportal-dev-RequestTokenLambdaFunctionQualifiedArn"
+        "Name": "sls-ice-testportal-prod-RequestTokenLambdaFunctionQualifiedArn"
       }
     },
     "GetAccessCodeLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetAccessCodeLambdaVersionHpe28Xh0k5GAQIVgvKJuYCkAQ8xSRcP2zxniRiYs"
+        "Ref": "GetAccessCodeLambdaVersionhnZR8COLawlF3wWuoKUpMOJkV3FBkiVBubGfNGjeg"
       },
       "Export": {
-        "Name": "sls-ice-testportal-dev-GetAccessCodeLambdaFunctionQualifiedArn"
+        "Name": "sls-ice-testportal-prod-GetAccessCodeLambdaFunctionQualifiedArn"
+      }
+    },
+    "AdminLoginLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AdminLoginLambdaVersionwaNQxlSUUrkVPnMe7qlz7SF6gr5tFgK3EN66rQy0d0"
+      },
+      "Export": {
+        "Name": "sls-ice-testportal-prod-AdminLoginLambdaFunctionQualifiedArn"
+      }
+    },
+    "AdminTestsLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AdminTestsLambdaVersioneEf6JtB3c9bQsRN6u9cZCjWzAKNI1XzQeXF3L9gI"
+      },
+      "Export": {
+        "Name": "sls-ice-testportal-prod-AdminTestsLambdaFunctionQualifiedArn"
       }
     },
     "ServiceEndpoint": {
@@ -677,18 +1167,18 @@
             {
               "Ref": "AWS::URLSuffix"
             },
-            "/dev"
+            "/prod"
           ]
         ]
       },
       "Export": {
-        "Name": "sls-ice-testportal-dev-ServiceEndpoint"
+        "Name": "sls-ice-testportal-prod-ServiceEndpoint"
       }
     },
     "ApiEndpoint": {
       "Description": "API Gateway endpoint URL",
       "Value": {
-        "Fn::Sub": "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
+        "Fn::Sub": "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
       }
     },
     "TokensTableName": {

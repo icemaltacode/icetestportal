@@ -15,6 +15,9 @@ provider:
     TOKENS_TABLE: ${self:service}-tokens-${self:provider.stage}
     TESTPORTAL_SECRET_NAME: ${self:service}/testportal-api-key/${self:provider.stage}
     TESTPORTAL_API_URL: ${env:TESTPORTAL_API_URL, 'https://www.testportal.com/api/v1'}
+    ADMIN_PASSWORD_SECRET_NAME: ${self:service}/admin-password/${self:provider.stage}
+
+custom:
 
   # IAM permissions for Lambda functions
   iam:
@@ -34,6 +37,32 @@ provider:
             - secretsmanager:GetSecretValue
           Resource:
             - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${self:service}/testportal-api-key/${self:provider.stage}*
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource:
+            - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${self:service}/admin-password/${self:provider.stage}*
+  iamRoleStatements:
+    # DynamoDB permissions for token storage
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:DeleteItem
+      Resource:
+        - !GetAtt TokensTable.Arn
+    # Secrets Manager permissions for API key retrieval
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource:
+        - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${self:service}/testportal-api-key/${self:provider.stage}*
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource:
+        - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${self:service}/admin-password/${self:provider.stage}*
+
 
 # Build configuration for TypeScript
 build:
@@ -90,6 +119,50 @@ functions:
             headers:
               - Content-Type
             allowCredentials: false
+  adminLogin:
+    handler: src/handlers/adminLogin.handler
+    description: Validates admin password for TestPortal admin frontend
+    events:
+      - http:
+          path: /admin/login
+          method: post
+          cors:
+            origin: https://testportalurl.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+      - http:
+          path: /admin/login
+          method: options
+          cors:
+            origin: https://testportalurl.icecampus.com
+            headers:
+              - Content-Type
+            allowCredentials: false
+  adminTests:
+    handler: src/handlers/adminTests.handler
+    description: Returns TestPortal tests list for the admin frontend
+    events:
+      - http:
+          path: /admin/tests/headers
+          method: get
+          cors:
+            origin: https://testportalurl.icecampus.com
+            headers:
+              - Content-Type
+              - X-Admin-Password
+              - Authorization
+            allowCredentials: false
+      - http:
+          path: /admin/tests/headers
+          method: options
+          cors:
+            origin: https://testportalurl.icecampus.com
+            headers:
+              - Content-Type
+              - X-Admin-Password
+              - Authorization
+            allowCredentials: false
 
 resources:
   Resources:
@@ -100,9 +173,9 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
         ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'https://my.icecampus.com'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type'"
-          gatewayresponse.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Admin-Password,Authorization'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
     ApiGatewayResponseDefault5xx:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
@@ -110,9 +183,9 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
         ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'https://my.icecampus.com'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type'"
-          gatewayresponse.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Admin-Password,Authorization'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
     # DynamoDB table for storing authentication tokens
     TokensTable:
       Type: AWS::DynamoDB::Table

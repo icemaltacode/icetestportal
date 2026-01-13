@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TestPortal Link Builder</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap"
+      rel="stylesheet"
+    >
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">ICE Campus</p>
+        <h1>TestPortal Link Builder</h1>
+        <p class="lede">
+          Pick a test and copy the Circle link. The system will fetch an access code
+          when the learner starts.
+        </p>
+      </section>
+
+      <section class="card" id="login-card">
+        <h2>Admin Login</h2>
+        <form id="login-form">
+          <label class="field">
+            <span>Password</span>
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Unlock Tests</button>
+          <p class="hint" id="login-error" role="alert"></p>
+        </form>
+      </section>
+
+      <section class="card hidden" id="tests-card">
+        <div class="card-header">
+          <div>
+            <h2>Available Tests</h2>
+            <p class="hint">Click a row to reveal the Circle link.</p>
+          </div>
+          <div class="controls">
+            <label class="search">
+              <span class="sr-only">Search tests</span>
+              <input id="search-input" type="search" placeholder="Search by name or category">
+            </label>
+            <button id="refresh-tests" type="button">Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-sort="name"><span>Test</span><span class="sort-indicator"></span></th>
+                <th data-sort="categoryName"><span>Category</span><span class="sort-indicator"></span></th>
+                <th data-sort="status"><span>Status</span><span class="sort-indicator"></span></th>
+                <th data-sort="publicId"><span>Public Id</span><span class="sort-indicator"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tests-body"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="tests-error" role="alert"></p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

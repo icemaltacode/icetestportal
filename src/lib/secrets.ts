@@ -83,3 +83,27 @@ export const getTestPortalApiKey = async (): Promise<string | null> => {
     return secretValue;
   }
 };
+
+/**
+ * Retrieves the admin password for the TestPortal admin frontend.
+ */
+export const getAdminPassword = async (): Promise<string | null> => {
+  const secretName = process.env.ADMIN_PASSWORD_SECRET_NAME;
+
+  if (!secretName) {
+    console.warn('[ICE_TESTPORTAL] ADMIN_PASSWORD_SECRET_NAME not configured');
+    return null;
+  }
+
+  const secretValue = await getSecret(secretName);
+  if (!secretValue) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(secretValue);
+    return parsed.password || parsed.adminPassword || secretValue;
+  } catch {
+    return secretValue;
+  }
+};

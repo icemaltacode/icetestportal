@@ -3,7 +3,7 @@
 // Usage: <a href="https://testportal.invalid/YOUR_TEST_ID">Start Test</a>
 // ============================================
 (() => {
-  const API_BASE_URL = 'https://gs8iaekpl2.execute-api.eu-south-1.amazonaws.com/dev';
+  const API_BASE_URL = 'https://a2e1qx66y5.execute-api.eu-south-1.amazonaws.com/prod';
   const TESTPORTAL_START_URL = 'https://icecampus.testportal.net/exam/start.html';
   const SEL = 'a[href^="https://testportal.invalid/"]';
   let observer;
@@ -106,14 +106,21 @@
       return;
     }
 
+    const personalData = {
+      firstName,
+      lastName
+    };
+
+    const email = getUserEmail(user);
+    if (email) {
+      personalData.email = email;
+    }
+
     const startTestRequest = {
       accessCode,
       autoSubmit: false,
       startPageReadOnly: true,
-      personalData: {
-        firstName,
-        lastName
-      }
+      personalData
     };
 
     const personUID = getPersonUid(user) || getUserEmail(user);
